@@ -247,7 +247,7 @@ h1.title{
 
 <!-- 第三幕：双纪念日 -->
 <section class="scene" id="scene3">
-  <p class="days-label">今天，是我们相爱的</p>
+  <p class="days-label">今天，是我们念爱的</p>
   <div class="days-num"><small>第</small><span id="dayNum1">0</span><small>天</small></div>
   <p class="days-label" style="margin-top:3vh">成为夫妻的</p>
   <div class="days-num alt"><small>第</small><span id="dayNum2">0</span><small>天</small></div>
@@ -261,7 +261,7 @@ h1.title{
   <div class="stage"></div>
   <div class="finale-title" id="finaleTitle">七 夕 快 乐</div>
   <div class="q-card" id="qCard">
-    <p class="q-text" id="qText">下辈子，还做我老婆吗？</p>
+    <p class="q-text" id="qText">我们要一直在一起好吗？</p>
     <div class="q-area" id="qArea">
       <button class="btn primary" id="btnYes">好呀</button>
       <button class="btn ghost" id="btnNo">再想想</button>
@@ -301,9 +301,9 @@ const CONFIG = {
 
   // 照片：文件名必须和仓库里完全一致（含大小写！GitHub Pages 区分大小写）
   photos: [
-    { src: "2023.JPG", caption: "2023" },
+    { src: "2023.png", caption: "2023" },
     { src: "2024.jpg", caption: "2024" },
-    { src: "2025.JPG", caption: "2025" },
+    { src: "2025.png", caption: "2025" },
   ],
 };
 /* ============================================================ */
@@ -517,7 +517,7 @@ function startDays(){
   countUp($("#dayNum1"), daysSince(CONFIG.Date1));
   countUp($("#dayNum2"), daysSince(CONFIG.Date2));
   const f = s => (s || "").replaceAll("-", ".");
-  $("#daysSub").textContent = `${f(CONFIG.Date1)} 相遇相爱 · ${f(CONFIG.Date2)} 结为夫妻 · 未完待续`;
+  $("#daysSub").textContent = `${f(CONFIG.Date1)} 念爱 · ${f(CONFIG.Date2)} 结婚 · 未完待续`;
 }
 (function renderPhotos(){
   const row = $("#photoRow");
