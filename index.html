@@ -78,8 +78,10 @@ h1.title{
 .envelope{
   position:relative;width:min(74vw,300px);aspect-ratio:3/2;
   cursor:pointer;filter:drop-shadow(0 18px 34px rgba(0,0,0,.5));
-  transition:transform .3s ease;
+  animation:envFloat 4.5s ease-in-out infinite;
 }
+@keyframes envFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.envelope.open{animation:none}
 .envelope:active{transform:scale(.97)}
 .env-body{position:absolute;inset:0;border-radius:8px;background:linear-gradient(160deg,#2a305f,#1d2350);overflow:hidden}
 .env-body::after{
@@ -89,6 +91,12 @@ h1.title{
     linear-gradient(-64deg, #232a5c 49.6%, transparent 50%) right bottom/51% 78% no-repeat,
     linear-gradient(180deg, transparent 30%, #2d346b 100%) bottom/100% 62% no-repeat;
   border-radius:8px;
+}
+.env-to{
+  position:absolute;left:0;right:0;bottom:13%;z-index:2;
+  font-family:var(--font-kai);font-size:17px;letter-spacing:.34em;text-indent:.34em;
+  color:var(--gold);opacity:.92;text-shadow:0 0 12px rgba(242,200,121,.35);
+  pointer-events:none;
 }
 .env-paper{
   position:absolute;left:7%;right:7%;top:9%;height:82%;
@@ -115,9 +123,14 @@ h1.title{
   color:#ffe9ee;font-size:20px;line-height:46px;
   box-shadow:0 3px 10px rgba(0,0,0,.45), inset 0 0 0 3px rgba(255,255,255,.14);
   transition:opacity .5s ease, transform .5s ease;
+  animation:sealGlow 2.6s ease-in-out infinite;
+}
+@keyframes sealGlow{
+  0%,100%{box-shadow:0 3px 10px rgba(0,0,0,.45), inset 0 0 0 3px rgba(255,255,255,.14)}
+  50%{box-shadow:0 3px 10px rgba(0,0,0,.45), 0 0 24px rgba(255,142,166,.65), inset 0 0 0 3px rgba(255,255,255,.14)}
 }
 .envelope.open .env-flap{transform:rotateX(180deg);z-index:0}
-.envelope.open .env-seal{opacity:0;transform:translate(-50%,-90%) scale(.6)}
+.envelope.open .env-seal{opacity:0;transform:translate(-50%,-90%) scale(.6);animation:none}
 .envelope.open .env-paper{transform:translateY(-46%)}
 
 /* ========== 第二幕：信纸 ========== */
@@ -163,7 +176,13 @@ h1.title{
 .polaroid{
   background:#fdfbf4;padding:7px 7px 24px;border-radius:3px;
   width:104px;box-shadow:0 10px 26px rgba(0,0,0,.45);
-  transform:rotate(var(--tilt,0deg));
+  opacity:0;
+  transform:rotate(var(--tilt,0deg)) translateY(28px) scale(.92);
+  transition:opacity .55s ease, transform .55s cubic-bezier(.2,.9,.3,1.25);
+}
+.polaroid.in{
+  opacity:1;
+  transform:rotate(var(--tilt,0deg)) translateY(0) scale(1);
 }
 .polaroid .ph{
   width:100%;aspect-ratio:1/1;object-fit:cover;display:block;border-radius:2px;background:#e8e2d2;
@@ -174,6 +193,24 @@ h1.title{
   border:1px dashed #cfc4ad;
 }
 .polaroid figcaption{font-family:var(--font-kai);font-size:11px;color:#6b5d4b;margin-top:7px;text-align:center}
+
+/* ========== 照片放大查看 ========== */
+#lightbox{
+  position:fixed;inset:0;z-index:30;
+  background:rgba(6,8,26,.93);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+#lightbox.show{display:flex;animation:lbIn .3s ease}
+@keyframes lbIn{from{opacity:0}to{opacity:1}}
+#lbImg{
+  max-width:92vw;max-height:72vh;object-fit:contain;
+  border:6px solid #fdfbf4;border-radius:4px;
+  box-shadow:0 24px 70px rgba(0,0,0,.65);
+}
+#lbCap{margin-top:16px;font-family:var(--font-kai);font-size:15px;color:var(--paper);letter-spacing:.24em;text-indent:.24em}
+#lbHint{margin-top:8px;font-size:11px;color:var(--haze);letter-spacing:.15em}
 
 /* ========== 第四幕：终章 ========== */
 #scene4 .stage{min-height:34dvh;min-height:34vh}
@@ -212,8 +249,9 @@ h1.title{
 #muteBtn.muted{color:#6f6c9a;border-color:rgba(142,138,201,.35)}
 
 @media (prefers-reduced-motion: reduce){
-  .hint{animation:none}
+  .hint,.envelope,.env-seal{animation:none}
   .scene,.env-flap,.env-paper{transition-duration:.01s}
+  .polaroid{opacity:1;transform:rotate(var(--tilt,0deg))}
 }
 </style>
 </head>
@@ -230,6 +268,7 @@ h1.title{
   <div class="envelope" id="envelope" role="button" aria-label="拆开信封">
     <div class="env-paper"></div>
     <div class="env-body"></div>
+    <div class="env-to" id="envTo"></div>
     <div class="env-flap"></div>
     <div class="env-seal">♥</div>
   </div>
@@ -247,7 +286,7 @@ h1.title{
 
 <!-- 第三幕：双纪念日 -->
 <section class="scene" id="scene3">
-  <p class="days-label">今天，是我们念爱的</p>
+  <p class="days-label">今天，是我们恋爱的</p>
   <div class="days-num"><small>第</small><span id="dayNum1">0</span><small>天</small></div>
   <p class="days-label" style="margin-top:3vh">成为夫妻的</p>
   <div class="days-num alt"><small>第</small><span id="dayNum2">0</span><small>天</small></div>
@@ -274,6 +313,13 @@ h1.title{
   </div>
 </section>
 
+<!-- 照片放大层 -->
+<div id="lightbox">
+  <img id="lbImg" alt="">
+  <p id="lbCap"></p>
+  <p id="lbHint">轻点任意处关闭</p>
+</div>
+
 <audio id="bgm" loop preload="auto"></audio>
 
 <script>
@@ -285,7 +331,7 @@ const CONFIG = {
   yourName: "石头",                // 你的落款
   Date1: "2016-04-24",             // 恋爱纪念日，格式 YYYY-MM-DD
   Date2: "2023-06-09",             // 结婚纪念日，格式 YYYY-MM-DD
-  music: "music.mp3",                       // 背景音乐：同目录放 music.mp3 后填 "music.mp3"；留空则无音乐
+  music: "music.mp3",              // 背景音乐：同目录放 music.mp3 后填 "music.mp3"；留空则无音乐
 
   // 信的内容：一行一段
   letter: [
@@ -319,10 +365,10 @@ function show(id){
   $(id).classList.add("active");
 }
 
-/* ---------- 星空引擎：星 / 流星 / 心形汇聚 / 烟花 ---------- */
+/* ---------- 星空引擎：星 / 流星 / 指尖星尘 / 心形汇聚 / 烟花 ---------- */
 const cv = $("#sky"), ctx = cv.getContext("2d");
 let W = 0, H = 0, DPR = 1;
-let stars = [], meteors = [], hearts = [], sparks = [];
+let stars = [], meteors = [], dust = [], hearts = [], sparks = [];
 let heartOn = false;
 
 function resize(){
@@ -346,6 +392,29 @@ function spawnMeteor(){
   meteors.push({ x: rand(W * .3, W), y: rand(-30, H * .25), vx: -rand(4, 6), vy: rand(2.4, 3.4), life: 1 });
 }
 setInterval(spawnMeteor, 7000);
+
+/* 指尖星尘 */
+const DUST_HUES = ["255,255,255", "242,200,121", "242,155,176"];
+function spawnDust(x, y, n){
+  for (let i = 0; i < n; i++){
+    dust.push({
+      x: x + rand(-4, 4), y: y + rand(-4, 4),
+      vx: rand(-.5, .5), vy: rand(-.7, .3),
+      r: rand(.8, 1.9), life: rand(.7, 1),
+      hue: DUST_HUES[(Math.random() * 3) | 0]
+    });
+  }
+  if (dust.length > 240) dust.splice(0, dust.length - 240);
+}
+let lastDust = 0;
+addEventListener("pointermove", e => {
+  if (RM) return;
+  const now = performance.now();
+  if (now - lastDust < 26) return;
+  lastDust = now;
+  spawnDust(e.clientX, e.clientY, 2);
+}, { passive: true });
+addEventListener("pointerdown", e => { if (!RM) spawnDust(e.clientX, e.clientY, 6); }, { passive: true });
 
 function heartPoints(n, scale, cx, cy){
   const pts = [];
@@ -402,13 +471,24 @@ function loop(now){
     ctx.strokeStyle = g; ctx.lineWidth = 1.4;
     ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - m.vx * 14, m.y - m.vy * 14); ctx.stroke();
   }
+  for (let i = dust.length - 1; i >= 0; i--){
+    const d = dust[i];
+    d.x += d.vx; d.y += d.vy; d.vy += .02; d.life -= .028;
+    if (d.life <= 0){ dust.splice(i, 1); continue; }
+    ctx.fillStyle = `rgba(${d.hue},${d.life * .9})`;
+    ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 7); ctx.fill();
+  }
   if (heartOn){
+    const hcx = W / 2, hcy = H * .34;
+    const beat = RM ? 1 : 1 + .028 * Math.sin(t * 2.4);
     for (const h of hearts){
       h.x += (h.tx - h.x) * .045;
       h.y += (h.ty - h.y) * .045;
       const a = .5 + .5 * Math.abs(Math.sin(h.p + t * 1.6));
       ctx.fillStyle = h.pink ? `rgba(242,155,176,${a})` : `rgba(242,200,121,${a})`;
-      ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, 7); ctx.fill();
+      ctx.beginPath();
+      ctx.arc(hcx + (h.x - hcx) * beat, hcy + (h.y - hcy) * beat, h.r, 0, 7);
+      ctx.fill();
     }
   }
   for (let i = sparks.length - 1; i >= 0; i--){
@@ -426,24 +506,45 @@ addEventListener("resize", resize);
 resize();
 requestAnimationFrame(loop);
 
-/* ---------- 音乐 ---------- */
+/* ---------- 音乐：四层触发保险 ---------- */
 const bgm = $("#bgm"), muteBtn = $("#muteBtn");
+let wantMusic = false;   // 用户已点过信封（表达了"开始"）
+let userMuted = false;   // 用户主动按了暂停
 if (CONFIG.music){
   bgm.src = CONFIG.music;
   muteBtn.classList.add("on");
+  bgm.load();
 }
-muteBtn.addEventListener("click", () => {
-  if (bgm.paused){ bgm.play().catch(() => {}); muteBtn.classList.remove("muted"); }
-  else { bgm.pause(); muteBtn.classList.add("muted"); }
+function tryPlay(){
+  if (!CONFIG.music || userMuted) return;
+  const p = bgm.play();
+  if (p && p.catch) p.catch(() => {});
+}
+/* 保险2：音频缓冲就绪后，若该响未响则补播 */
+bgm.addEventListener("canplaythrough", () => { if (wantMusic && bgm.paused) tryPlay(); });
+/* 保险3：点信封后仍未响，用户的下一次任意触摸把它带起来 */
+addEventListener("pointerdown", () => { if (wantMusic && bgm.paused) tryPlay(); }, { passive: true });
+/* 保险4：微信内置浏览器，JSBridge 就绪后重试 */
+document.addEventListener("WeixinJSBridgeReady", () => { if (wantMusic) tryPlay(); }, false);
+/* 播放状态同步到按钮 */
+bgm.addEventListener("playing", () => muteBtn.classList.remove("muted"));
+muteBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  if (bgm.paused){ userMuted = false; wantMusic = true; tryPlay(); }
+  else { userMuted = true; bgm.pause(); muteBtn.classList.add("muted"); }
 });
 
 /* ---------- 第一幕：拆信 ---------- */
 $("#mainTitle").textContent = `给${CONFIG.herName}的一封信`;
+$("#envTo").textContent = `${CONFIG.herName} 亲启`;
 let opened = false;
 $("#envelope").addEventListener("click", async () => {
   if (opened) return; opened = true;
+  const sr = document.querySelector(".env-seal").getBoundingClientRect();
+  if (!RM) fireworksBurst(sr.left + sr.width / 2, sr.top + sr.height / 2);
   $("#envelope").classList.add("open");
-  if (CONFIG.music) bgm.play().catch(() => {});
+  wantMusic = true;      /* 保险1：拆封即尝试起乐 */
+  tryPlay();
   await sleep(RM ? 200 : 1150);
   show("#scene2");
   typeLetter();
@@ -517,8 +618,14 @@ function startDays(){
   countUp($("#dayNum1"), daysSince(CONFIG.Date1));
   countUp($("#dayNum2"), daysSince(CONFIG.Date2));
   const f = s => (s || "").replaceAll("-", ".");
-  $("#daysSub").textContent = `${f(CONFIG.Date1)} 念爱 · ${f(CONFIG.Date2)} 结婚 · 未完待续`;
+  $("#daysSub").textContent = `${f(CONFIG.Date1)} 恋爱 · ${f(CONFIG.Date2)} 结婚 · 未完待续`;
+  document.querySelectorAll(".polaroid").forEach((el, i) => {
+    setTimeout(() => el.classList.add("in"), 500 + i * 200);
+  });
 }
+/* 照片放大 */
+const lightbox = $("#lightbox"), lbImg = $("#lbImg"), lbCap = $("#lbCap");
+lightbox.addEventListener("click", () => lightbox.classList.remove("show"));
 (function renderPhotos(){
   const row = $("#photoRow");
   const tilts = [-4, 3, -2, 4];
@@ -528,6 +635,11 @@ function startDays(){
     fig.style.setProperty("--tilt", tilts[i % tilts.length] + "deg");
     const img = document.createElement("img");
     img.className = "ph"; img.alt = ph.caption || ""; img.src = ph.src;
+    img.addEventListener("click", () => {
+      lbImg.src = ph.src;
+      lbCap.textContent = ph.caption || "";
+      lightbox.classList.add("show");
+    });
     img.onerror = () => {
       const d = document.createElement("div");
       d.className = "ph missing";
@@ -543,7 +655,7 @@ function startDays(){
 $("#btnNext3").addEventListener("click", () => { show("#scene4"); startFinale(); });
 
 /* ---------- 第四幕：星汇成心 + 问答 + 烟花 ---------- */
-let finaleStarted = false;
+let finaleStarted = false, celebrating = false;
 function startFinale(){
   if (finaleStarted) return; finaleStarted = true;
   buildHeart(false);
@@ -577,9 +689,16 @@ btnYes.addEventListener("click", () => {
   $("#fwName").textContent = `${CONFIG.herName}，七夕快乐`;
   $("#fwSign").textContent = `爱你的 ${CONFIG.yourName} · 2026.08.19`;
   $("#finalWords").classList.add("show");
+  celebrating = true;
   celebrate();
   setInterval(() => { if (Math.random() < .5) fireworksBurst(rand(W * .2, W * .8), rand(H * .1, H * .4)); }, 2600);
 });
+/* 点哪儿，烟花开在哪儿 */
+addEventListener("pointerdown", e => {
+  if (!celebrating) return;
+  if (e.target.closest("button")) return;
+  fireworksBurst(e.clientX, e.clientY);
+}, { passive: true });
 </script>
 </body>
 </html>
